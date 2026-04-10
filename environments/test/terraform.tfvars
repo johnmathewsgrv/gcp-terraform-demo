@@ -1,3 +1,3 @@
-project_id = "YOUR_GCP_PROJECT_ID"
+project_id = "terraform-demo-project-492911"
 env        = "test"
 region     = "us-central1"
