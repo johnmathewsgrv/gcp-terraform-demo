@@ -8,7 +8,7 @@ resource "google_storage_bucket" "demo_bucket" {
   location      = var.region
   force_destroy = true
 
-  uniform_bucket_level_access = true    # ← ADD THIS LINE
+  uniform_bucket_level_access = true  
 
   labels = {
     environment = var.env
