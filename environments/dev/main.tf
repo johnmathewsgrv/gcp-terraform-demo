@@ -8,6 +8,8 @@ resource "google_storage_bucket" "demo_bucket" {
   location      = var.region
   force_destroy = true
 
+  uniform_bucket_level_access = true    # ← ADD THIS LINE
+
   labels = {
     environment = var.env
     managed_by  = "terraform"
