@@ -18,8 +18,7 @@ pipeline {
     stage('SAST Scan') {
       steps {
         sh '''
-          pip3 install checkov --quiet
-          checkov -d . --quiet || true
+          /root/.local/bin/checkov -d . --quiet || true
         '''
       }
     }
