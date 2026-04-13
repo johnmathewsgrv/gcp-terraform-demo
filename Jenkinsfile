@@ -7,32 +7,43 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
+    stage('Checkout Source Code') {
       steps {
         checkout scm
-        echo "Triggered by ServiceNow Ticket: ${params.SNOW_TICKET}"
+        echo "Pipeline triggered by ServiceNow Ticket: ${params.SNOW_TICKET}"
       }
     }
 
-    stage('SAST Scan') {
+    stage('Terraform Validate') {
       steps {
         sh '''
-          /root/.local/bin/checkov -d . --quiet || true
+          cd environments/dev
+          terraform init -input=false
+          terraform validate
         '''
       }
     }
 
-    stage('Terraform Plan DEV') {
+    stage('Security Scan (SAST - Checkov)') {
+      steps {
+        sh '''
+          export PATH=$PATH:/var/jenkins_home/.local/bin
+          checkov -d . || true
+        '''
+      }
+    }
+
+    stage('Terraform Plan - DEV') {
       steps {
         sh '''
           cd environments/dev
-          terraform init
+          terraform init -input=false
           terraform plan -var-file=terraform.tfvars
         '''
       }
     }
 
-    stage('Deploy DEV') {
+    stage('Deploy Infrastructure - DEV') {
       steps {
         sh '''
           cd environments/dev
@@ -41,23 +52,23 @@ pipeline {
       }
     }
 
-    stage('Approval to promote to TEST') {
+    stage('Approval to Promote to TEST') {
       steps {
-        input message: "Approve deployment to TEST?"
+        input message: "Approve deployment to TEST environment?"
       }
     }
 
-    stage('Terraform Plan TEST') {
+    stage('Terraform Plan - TEST') {
       steps {
         sh '''
           cd environments/test
-          terraform init
+          terraform init -input=false
           terraform plan -var-file=terraform.tfvars
         '''
       }
     }
 
-    stage('Deploy TEST') {
+    stage('Deploy Infrastructure - TEST') {
       steps {
         sh '''
           cd environments/test
@@ -66,7 +77,7 @@ pipeline {
       }
     }
 
-    stage('Audit Log') {
+    stage('Deployment Audit Log') {
       steps {
         sh '''
           echo "$(date): DEV and TEST deployed | Ticket: ${SNOW_TICKET}" >> audit.log
@@ -74,5 +85,6 @@ pipeline {
         '''
       }
     }
+
   }
 }
